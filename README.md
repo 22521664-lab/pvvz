@@ -6,14 +6,12 @@ App chat realtime xây bằng React + Firebase, làm cho môn học.
 - Đăng nhập bằng Google
 - Nhắn tin realtime (dùng Firestore onSnapshot)
 - Hiện trạng thái đã xem
-- Gửi ảnh qua Cloudinary
 - Typing indicator
 - Responsive mobile
 
 ## Tech stack
 - React + Vite
 - Firebase (Auth + Firestore)
-- Cloudinary (upload ảnh)
 
 ## Cài đặt
 ```bash
