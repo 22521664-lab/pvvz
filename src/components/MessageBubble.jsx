@@ -5,7 +5,18 @@ export default function MessageBubble({ msg, isMe }) {
       <div className="msg-row">
         <div className="msg-bubble">{msg.imageUrl ? <img src={msg.imageUrl} className="msg-image" /> : msg.text}</div>
       </div>
-      <span className="msg-time">{time}</span>
+        <span className="msg-time">
+        {time}
+        {isMe && (
+          <span style={{
+            marginLeft: 4,
+            fontSize: 12,
+            color: msg.read ? '#0084ff' : '#aaa'
+          }}>
+            {msg.read ? ' ✓✓' : ' ✓'}
+          </span>
+        )}
+        </span>
     </div>
   )
 }

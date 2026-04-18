@@ -4,6 +4,7 @@ import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
 import { collection, onSnapshot, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, set, onDisconnect } from 'firebase/database'
 import { useMessages } from './hooks/useMessages'
+import { useTyping } from './hooks/useTyping'
 import Sidebar from './components/Sidebar'
 import ChatHeader from './components/ChatHeader'
 import MessageBubble from './components/MessageBubble'
@@ -16,6 +17,13 @@ function App() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [text, setText] = useState('')
   const { messages } = useMessages(user, selectedUser)
+  const [isTyping, setIsTyping] = useState(false)
+  const { handleTyping, subscribeToTyping } = useTyping(user, selectedUser)
+
+useEffect(() => {
+  const unsub = subscribeToTyping(setIsTyping)
+  return () => { if (typeof unsub === 'function') unsub() }
+}, [user?.uid, selectedUser?.uid])
 
   useEffect(() => {
     return auth.onAuthStateChanged(async (curr) => {
@@ -31,8 +39,8 @@ function App() {
   useEffect(() => {
     if (!user) return
     const statusRef = ref(rtdb, `status/${user.uid}`)
-    set(statusRef, true)
-    onDisconnect(statusRef).set(false)
+   set(statusRef, { online: true })
+   onDisconnect(statusRef).set({ online: false })
   }, [user])
 
   useEffect(() => {
@@ -54,7 +62,7 @@ function App() {
 
   const handleLogout = async () => {
     const statusRef = ref(rtdb, `status/${user.uid}`)
-    await set(statusRef, false)
+    await set(statusRef, { online: false })
     signOut(auth)
   }
 
@@ -104,8 +112,19 @@ function App() {
             <ChatHeader selectedUser={selectedUser} onBack={() => setSelectedUser(null)} />
             <div className="message-list">
               {messages.map(m => <MessageBubble key={m.id} msg={m} isMe={m.senderId === user.uid} />)}
+              {isTyping && (
+                <div className="msg-container others">
+                  <div className="msg-row">
+                    <div className="msg-bubble typing-bubble">
+                      <span className="typing-dot"/>
+                      <span className="typing-dot"/>
+                      <span className="typing-dot"/>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <MessageInput val={text} setVal={setText} onSend={send} />
+           <MessageInput val={text} setVal={setText} onSend={send} onTyping={handleTyping} />
           </>
         ) : <div className="empty-state">Chọn một người để chat nha!</div>}
       </section>
