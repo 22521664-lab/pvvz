@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { db, rtdb } from '../firebase'
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore'
 import { ref, onValue } from 'firebase/database'
+import { generateAvatar } from '../utils/avatar'
 
 export default function UserItem({ currentUser, targetUser, isActive, onClick }) {
   const [lastMsg, setLastMsg] = useState(null)
@@ -36,7 +37,7 @@ export default function UserItem({ currentUser, targetUser, isActive, onClick })
     if (!targetUser) return
     const statusRef = ref(rtdb, `status/${targetUser.uid}`)
     const unsub = onValue(statusRef, (snapshot) => {
-      setIsOnline(snapshot.val() === true)
+      setIsOnline(snapshot.val()?.online === true)
     })
     return () => unsub()
   }, [targetUser])
@@ -46,7 +47,15 @@ export default function UserItem({ currentUser, targetUser, isActive, onClick })
   return (
     <div className={`user-item ${isActive ? 'active' : ''}`} onClick={() => onClick(targetUser)}>
       <div style={{ position: 'relative' }}>
-        <img src={targetUser.photoURL} alt="avt" />
+        {/* SỬA THẺ IMG Ở ĐÂY */}
+        <img 
+          src={targetUser.photoURL || generateAvatar(targetUser.displayName)} 
+          alt="avt" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = generateAvatar(targetUser.displayName);
+          }}
+        />
         {isOnline && (
           <div style={{ position: 'absolute', bottom: 2, right: 10, width: 12, height: 12, backgroundColor: '#31a24c', borderRadius: '50%', border: '2px solid var(--bg-panel)' }}></div>
         )}
@@ -65,8 +74,7 @@ export default function UserItem({ currentUser, targetUser, isActive, onClick })
             ? (isOnline ? 'Đang hoạt động' : 'Offline')
             : (lastMsg.senderId === currentUser.uid
               ? `Bạn: ${lastMsg.imageUrl ? '[Hình ảnh]' : lastMsg.text}`
-              : (lastMsg.imageUrl ? '[Hình ảnh]' : lastMsg.text))
-          }
+              : (lastMsg.imageUrl ? '[Hình ảnh]' : lastMsg.text))}
         </span>
       </div>
 
